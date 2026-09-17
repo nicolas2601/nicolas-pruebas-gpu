@@ -1,0 +1,8 @@
+.venv/
+.conda-env/
+.cache/
+data/
+runs/
+__pycache__/
+*.pyc
+.pytest_cache/

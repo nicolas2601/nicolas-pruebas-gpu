@@ -1,0 +1,5 @@
+# torch and torchvision are installed separately with the cu128 index (see setup_env.sh).
+tensorboard>=2.17
+numpy>=1.26
+Pillow>=10.0
+pytest>=8.0

@@ -1,0 +1,13 @@
+[project]
+name = "pruebas"
+version = "0.1.0"
+description = "GPU probe: SimSiam over DINOv2 ViT-S/14 on STL-10 with DDP and TensorBoard"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
