@@ -50,14 +50,28 @@ class TwoViews(Dataset):
         return self.transform(image), self.transform(image)
 
 
-def build_unlabeled(root: str | Path, resolution: int, download: bool = True) -> TwoViews:
-    base = datasets.STL10(str(root), split="unlabeled", download=download)
-    return TwoViews(base, two_view_transform(resolution))
+DATASETS = ("imagenette", "stl10")
 
 
-def build_labeled(root: str | Path, resolution: int, split: str, download: bool = True):
-    return datasets.STL10(str(root), split=split, download=download,
-                          transform=eval_transform(resolution))
+def _open(name: str, root: str | Path, split: str, transform=None, download: bool = True):
+    """split is one of: pool (SSL images), train, test."""
+    if name == "stl10":
+        stl_split = {"pool": "unlabeled", "train": "train", "test": "test"}[split]
+        return datasets.STL10(str(root), split=stl_split, download=download, transform=transform)
+    if name == "imagenette":
+        # 160px release: 99 MB, 9.5k train / 3.9k val. Labels are never read for the pool.
+        im_split = {"pool": "train", "train": "train", "test": "val"}[split]
+        return datasets.Imagenette(str(root), split=im_split, size="160px", download=download,
+                                   transform=transform)
+    raise ValueError(f"unknown dataset {name}; choose from {DATASETS}")
+
+
+def build_unlabeled(root: str | Path, resolution: int, dataset: str = "imagenette") -> TwoViews:
+    return TwoViews(_open(dataset, root, "pool"), two_view_transform(resolution))
+
+
+def build_labeled(root: str | Path, resolution: int, split: str, dataset: str = "imagenette"):
+    return _open(dataset, root, split, transform=eval_transform(resolution))
 
 
 def ssl_loader(

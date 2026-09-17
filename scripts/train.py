@@ -26,6 +26,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data-root", default="data")
     p.add_argument("--output-dir", required=True)
+    p.add_argument("--dataset", default="imagenette", choices=("imagenette", "stl10"))
     p.add_argument("--backbone", default="dinov2_vits14")
     p.add_argument("--no-pretrained", action="store_true", help="random init (collapse ablation)")
     p.add_argument("--resolution", type=int, default=112)
@@ -47,7 +48,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     a = parse_args()
     cfg = TrainConfig(
-        data_root=a.data_root, output_dir=a.output_dir, backbone=a.backbone,
+        data_root=a.data_root, output_dir=a.output_dir, dataset=a.dataset, backbone=a.backbone,
         pretrained=not a.no_pretrained, resolution=a.resolution, batch_per_gpu=a.batch_per_gpu,
         epochs=a.epochs, lr_backbone=a.lr_backbone, lr_heads=a.lr_heads,
         warmup_steps=a.warmup_steps, precision=a.precision, workers=a.workers, seed=a.seed,

@@ -9,10 +9,11 @@ browser terminal.
 
 - Backbone: DINOv2 ViT-S/14 (torch.hub, pretrained), input 112x112 (8x8 patches).
 - Objective: SimSiam (negative cosine, stop-gradient, no negatives, no momentum encoder).
-- Data: STL-10 unlabeled split (100k images, 96x96) for SSL; labeled train/test for a
-  frozen-feature kNN probe (k=20). The pretrained backbone scores high on STL-10 before
-  any training, so the signal to watch is: kNN does not drop and `collapse_ratio`
-  stays near 1.0.
+- Data (`--dataset`): `imagenette` by default (160px release, 99 MB, 9.5k train images as
+  the SSL pool, val split for the probe); `stl10` optional (100k unlabeled 96x96, 2.6 GB,
+  slow mirror). Labels are only read by the frozen-feature kNN probe (k=20). The pretrained
+  backbone already scores high before any training, so the signal to watch is: kNN does
+  not drop and `collapse_ratio` stays near 1.0.
 
 ## Layout
 

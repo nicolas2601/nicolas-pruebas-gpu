@@ -50,7 +50,8 @@ def _run(cfg: TrainConfig, info: DistInfo, tracker: Tracker) -> dict:
     optimizer = build_optimizer(unwrap(model), cfg)
     base_lrs = [g["lr"] for g in optimizer.param_groups]
 
-    pool = data.subset(data.build_unlabeled(cfg.data_root, cfg.resolution), cfg.limit_unlabeled)
+    pool = data.subset(data.build_unlabeled(cfg.data_root, cfg.resolution, cfg.dataset),
+                       cfg.limit_unlabeled)
     loader = data.ssl_loader(pool, cfg.batch_per_gpu, cfg.workers, info.distributed, cfg.seed)
     total_steps = cfg.epochs * len(loader)
     if cfg.max_steps > 0:
@@ -129,8 +130,8 @@ class _KnnProbe:
 
     def _get_loaders(self):
         if self._loaders is None:
-            train = data.build_labeled(self.cfg.data_root, self.cfg.resolution, "train")
-            test = data.build_labeled(self.cfg.data_root, self.cfg.resolution, "test")
+            train = data.build_labeled(self.cfg.data_root, self.cfg.resolution, "train", self.cfg.dataset)
+            test = data.build_labeled(self.cfg.data_root, self.cfg.resolution, "test", self.cfg.dataset)
             self._loaders = (data.eval_loader(train, 256, self.cfg.workers),
                              data.eval_loader(test, 256, self.cfg.workers))
         return self._loaders

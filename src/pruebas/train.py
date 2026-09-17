@@ -18,6 +18,7 @@ from pruebas.model import check_resolution
 class TrainConfig:
     data_root: str
     output_dir: str
+    dataset: str = "imagenette"
     backbone: str = "dinov2_vits14"
     pretrained: bool = True
     resolution: int = 112
