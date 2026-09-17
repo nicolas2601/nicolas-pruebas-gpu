@@ -56,7 +56,8 @@ def main() -> None:
         resume=a.resume,
     )
     summary = run(cfg)
-    print("DONE", summary["final_step"], summary["knn"][-1] if summary["knn"] else None)
+    if summary["knn"]:  # only rank 0 evaluates; other ranks stay quiet
+        print("DONE", summary["final_step"], summary["knn"][-1])
 
 
 if __name__ == "__main__":
