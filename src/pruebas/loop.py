@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import torch
@@ -16,7 +16,8 @@ from pruebas.model import build_simsiam
 from pruebas.tracking import Tracker
 from pruebas.train import (
     DistInfo, TrainConfig, apply_lr, build_optimizer, load_checkpoint, lr_scale,
-    save_checkpoint, setup_distributed, teardown_distributed, unwrap, validate,
+    safe_workers, save_checkpoint, setup_distributed, shm_bytes, teardown_distributed,
+    unwrap, validate,
 )
 
 LOG_EVERY = 20
@@ -36,6 +37,11 @@ def run(cfg: TrainConfig) -> dict:
     tracker = Tracker(cfg.output_dir, enabled=info.is_main)
     tracker.text(f"config {asdict(cfg)}")
     tracker.text(f"world_size={info.world_size} device={info.device}")
+    workers = safe_workers(cfg.workers, shm_bytes())
+    if workers != cfg.workers:
+        tracker.text(f"WARNING /dev/shm is {shm_bytes() / 1e6:.0f} MB; forcing workers=0 "
+                     f"(requested {cfg.workers})")
+        cfg = replace(cfg, workers=workers)
     try:
         return _run(cfg, info, tracker)
     finally:

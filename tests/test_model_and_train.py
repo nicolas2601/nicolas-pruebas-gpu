@@ -4,8 +4,15 @@ from torch import nn
 
 from pruebas.model import SimSiam, check_resolution
 from pruebas.train import (
-    TrainConfig, apply_lr, build_optimizer, load_checkpoint, lr_scale, save_checkpoint, validate,
+    MIN_SHM_BYTES, TrainConfig, apply_lr, build_optimizer, load_checkpoint, lr_scale,
+    safe_workers, save_checkpoint, validate,
 )
+
+
+def test_small_shm_forces_single_process_loading():
+    assert safe_workers(8, 64 * 1024 * 1024) == 0
+    assert safe_workers(8, MIN_SHM_BYTES) == 8
+    assert safe_workers(0, 0) == 0
 
 
 class FakeBackbone(nn.Module):

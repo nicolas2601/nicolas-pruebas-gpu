@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import os
+import shutil
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -38,6 +39,9 @@ class TrainConfig:
     resume: str = ""
 
 
+MIN_SHM_BYTES = 256 * 1024 * 1024
+
+
 def validate(cfg: TrainConfig) -> TrainConfig:
     check_resolution(cfg.resolution)
     if cfg.precision not in ("bf16", "fp32"):
@@ -45,6 +49,22 @@ def validate(cfg: TrainConfig) -> TrainConfig:
     if cfg.batch_per_gpu <= 0 or cfg.epochs <= 0:
         raise ValueError("batch_per_gpu and epochs must be positive")
     return cfg
+
+
+def shm_bytes(path: str = "/dev/shm") -> int:
+    try:
+        return shutil.disk_usage(path).total
+    except OSError:
+        return 0
+
+
+def safe_workers(requested: int, shm_total: int) -> int:
+    """DataLoader workers hand batches over through /dev/shm. Kubernetes pods
+    often mount a 64 MB one; workers then die with 'unable to allocate shared
+    memory'. Below the threshold we load in the main process instead."""
+    if requested > 0 and shm_total < MIN_SHM_BYTES:
+        return 0
+    return requested
 
 
 @dataclass(frozen=True)
