@@ -36,6 +36,14 @@ def test_simsiam_returns_predictions_and_projections_of_the_right_shape():
     assert p1.shape == z1.shape == p2.shape == z2.shape == (4, 64)
 
 
+def test_backbone_mask_token_is_frozen_so_ddp_sees_no_unused_parameter():
+    backbone = FakeBackbone()
+    backbone.mask_token = nn.Parameter(torch.zeros(1, 32))
+    model = SimSiam(backbone, proj_dim=64, proj_hidden=64, pred_hidden=16)
+    assert model.backbone.mask_token.requires_grad is False
+    assert all(p.requires_grad for n, p in model.named_parameters() if "mask_token" not in n)
+
+
 def test_resolution_must_be_a_multiple_of_the_patch_size():
     check_resolution(112)
     with pytest.raises(ValueError):

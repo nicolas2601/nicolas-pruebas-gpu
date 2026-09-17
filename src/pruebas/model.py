@@ -44,6 +44,22 @@ def predictor(dim: int, hidden: int) -> nn.Sequential:
     )
 
 
+# DINOv2 parameters that never take part in the plain forward pass. DDP
+# refuses to run when a parameter with requires_grad receives no gradient,
+# so they are frozen instead of paying for find_unused_parameters=True.
+UNUSED_BACKBONE_PARAMS = ("mask_token",)
+
+
+def freeze_unused(backbone: nn.Module) -> list[str]:
+    frozen = []
+    for name in UNUSED_BACKBONE_PARAMS:
+        param = getattr(backbone, name, None)
+        if isinstance(param, nn.Parameter):
+            param.requires_grad_(False)
+            frozen.append(name)
+    return frozen
+
+
 class SimSiam(nn.Module):
     """Any backbone exposing ``embed_dim`` and returning (B, embed_dim) features."""
 
@@ -52,6 +68,7 @@ class SimSiam(nn.Module):
         pred_hidden: int = 512,
     ) -> None:
         super().__init__()
+        freeze_unused(backbone)
         self.backbone = backbone
         self.projector = projector(backbone.embed_dim, proj_hidden, proj_dim)
         self.predictor = predictor(proj_dim, pred_hidden)
